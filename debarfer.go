@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"image"
-	"image/gif"
 	"image/color"
+	"image/gif"
 	"os"
 )
 
@@ -61,10 +61,10 @@ func debarf_frame(frame *image.Paletted) error {
 			r, g, b, a := c.RGBA()
 			if pixel_is_transparent(frame, x, y) {
 				fmt.Printf("...")
-				frame.Set(x, y, color.RGBA64{uint16(r), uint16(g), uint16(b), 0xffff})
+				frame.Set(x, y, color.RGBA{uint8(r), uint8(g), uint8(b), 0x0})
 			} else if should_turn_pixel_transparent(frame, x, y) {
 				fmt.Printf("xxx")
-				frame.Set(x, y, color.RGBA64{0, 0, 0, 0xffff})
+				frame.Set(x, y, color.RGBA{0, 0, 0, 0})
 			} else {
 				r /= 0x1000
 				g /= 0x1000
