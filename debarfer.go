@@ -25,10 +25,13 @@ func pixel_is_light(img *image.Paletted, x int, y int) bool {
 func should_turn_pixel_transparent(img *image.Paletted, x int, y int) bool {
 	xmin := img.Rect.Min.X
 	ymin := img.Rect.Min.Y
-	xmax := img.Rect.Max.X
-	ymax := img.Rect.Max.Y
+	xmax := img.Rect.Max.X - 1
+	ymax := img.Rect.Max.Y - 1
 
-	if (y > ymin) && (y < ymax-1) && pixel_is_light(img, x, y) {
+	i_am_light := pixel_is_light(img, x, y)
+
+	// A light pixel between a transparent pixel and a dark pixel -> transparent
+	if (y > ymin) && (y < ymax) && i_am_light {
 		if pixel_is_transparent(img, x, y-1) && !pixel_is_light(img, x, y+1) {
 			return true
 		}
@@ -36,12 +39,27 @@ func should_turn_pixel_transparent(img *image.Paletted, x int, y int) bool {
 			return true
 		}
 	}
-
-	if (x > xmin) && (x < xmax-1) && pixel_is_light(img, x, y) {
+	if (x > xmin) && (x < xmax) && i_am_light {
 		if pixel_is_transparent(img, x-1, y) && !pixel_is_light(img, x+1, y) {
 			return true
 		}
 		if pixel_is_transparent(img, x+1, y) && !pixel_is_light(img, x-1, y) {
+			return true
+		}
+	}
+
+	// A light pixel between a dark pixel and the edge -> transparent
+	if i_am_light {
+		if y == ymin && !pixel_is_light(img, x, y+1) {
+			return true
+		}
+		if y == ymax && !pixel_is_light(img, x, y-1) {
+			return true
+		}
+		if x == xmin && !pixel_is_light(img, x+1, y) {
+			return true
+		}
+		if x == xmax && !pixel_is_light(img, x-1, y) {
 			return true
 		}
 	}
@@ -55,13 +73,13 @@ func debarf_frame(frame *image.Paletted) error {
 	xmax := frame.Rect.Max.X
 	ymax := frame.Rect.Max.Y
 
+	fmt.Printf("(%d, %d), (%d, %d)\n", xmin, xmax, ymin, ymax)
 	for y := ymin; y < ymax; y++ {
 		for x := xmin; x < xmax; x++ {
 			c := frame.At(x, y)
 			r, g, b, a := c.RGBA()
 			if pixel_is_transparent(frame, x, y) {
 				fmt.Printf("...")
-				frame.Set(x, y, color.RGBA{uint8(r), uint8(g), uint8(b), 0x0})
 			} else if should_turn_pixel_transparent(frame, x, y) {
 				fmt.Printf("xxx")
 				frame.Set(x, y, color.RGBA{0, 0, 0, 0})
@@ -139,3 +157,4 @@ func main() {
 		}
 	}
 }
+
